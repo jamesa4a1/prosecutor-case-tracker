@@ -1,0 +1,58 @@
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: aprosecutor-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laraveluser
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - aprosecutor-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Mailhog Service for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: aprosecutor-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP Port
+      - "8025:8025"  # Web UI Port
+    networks:
+      - aprosecutor-network
+
+  # phpMyAdmin Service for Database Management
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    container_name: aprosecutor-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: aprosecutor-mysql
+      PMA_USER: laraveluser
+      PMA_PASSWORD: laravel_password
+      PMA_ROOT_PASSWORD: root
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"  # phpMyAdmin UI Port
+    networks:
+      - aprosecutor-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  aprosecutor-network:
+    driver: bridge
