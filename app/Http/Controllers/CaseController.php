@@ -46,14 +46,14 @@ class CaseController extends Controller
         }
 
         $cases = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
-        $prosecutors = Prosecutor::where('active', true)->get();
+        $prosecutors = Prosecutor::where('is_active', true)->get();
 
         return view('cases.index', compact('cases', 'prosecutors'));
     }
 
     public function create()
     {
-        $prosecutors = Prosecutor::where('active', true)->get();
+        $prosecutors = Prosecutor::where('is_active', true)->get();
         $statuses = CaseModel::STATUSES;
         $types = CaseModel::TYPES;
 

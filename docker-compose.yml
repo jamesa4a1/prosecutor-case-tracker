@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel
+      MYSQL_DATABASE: prosecutor_app
       MYSQL_USER: laraveluser
       MYSQL_PASSWORD: laravel_password
     ports:
@@ -46,6 +46,38 @@ services:
       PMA_PORT: 3306
     ports:
       - "8080:80"  # phpMyAdmin UI Port
+    networks:
+      - aprosecutor-network
+
+  # Laravel App Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aprosecutor-app
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      APP_NAME: AProsecutor
+      APP_ENV: local
+      APP_DEBUG: true
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: aprosecutor-mysql
+      DB_PORT: 3306
+      DB_DATABASE: prosecutor_app
+      DB_USERNAME: laraveluser
+      DB_PASSWORD: laravel_password
+      MAIL_HOST: aprosecutor-mailhog
+      MAIL_PORT: 1025
+      MAIL_FROM_ADDRESS: admin@aprosecutor.local
+    ports:
+      - "8000:8000"  # Laravel App Port
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: php artisan serve --host=0.0.0.0 --port=8000
     networks:
       - aprosecutor-network
 

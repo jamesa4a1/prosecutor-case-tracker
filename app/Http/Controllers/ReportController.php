@@ -11,11 +11,42 @@ use Illuminate\Support\Facades\DB;
 class ReportController extends Controller
 {
     /**
-     * Display the reports dashboard.
+     * Display the reports dashboard with summary data.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('reports.index');
+        // Cases by status for pie/bar chart
+        $casesByStatus = CaseModel::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        // Top 5 prosecutors by case count
+        $topProsecutors = Prosecutor::withCount(['cases', 'cases as closed_cases_count' => function ($query) {
+                $query->where('status', 'Closed');
+            }])
+            ->where('is_active', true)
+            ->orderBy('cases_count', 'desc')
+            ->take(5)
+            ->get();
+
+        // Upcoming hearings in next 30 days
+        $upcomingHearings = Hearing::with(['case', 'assignedProsecutor'])
+            ->where('date_time', '>=', now())
+            ->where('date_time', '<=', now()->addDays(30))
+            ->orderBy('date_time')
+            ->take(10)
+            ->get();
+
+        // Get all active prosecutors for filter
+        $prosecutors = Prosecutor::where('is_active', true)->orderBy('name')->get();
+
+        return view('reports.index', compact(
+            'casesByStatus',
+            'topProsecutors',
+            'upcomingHearings',
+            'prosecutors'
+        ));
     }
 
     /**

@@ -537,3 +537,9 @@ docker-compose up -d    # Start fresh
 ## 📄 License
 
 The AProsecutor Case Tracker is open-source software licensed under the MIT license.
+
+## to docker compose start and stop in powershell
+
+cd "C:\Users\HP User\Desktop\Aprosecutor website\prosecutor-case-tracker"; docker compose start 
+
+cd "C:\Users\HP User\Desktop\Aprosecutor website\prosecutor-case-tracker"; docker compose stop
