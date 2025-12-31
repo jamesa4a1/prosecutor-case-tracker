@@ -129,7 +129,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $case->status_badge_class }}">
-                                {{ $case->status }}
+                                {{ $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

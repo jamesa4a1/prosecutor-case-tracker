@@ -97,16 +97,20 @@
                             'For Archive' => 'bg-slate-400',
                             'Closed' => 'bg-green-500',
                             'Pending' => 'bg-amber-500',
+                            'Under Investigation' => 'bg-amber-500',
+                            'Filed' => 'bg-green-500',
+                            'Dismissed' => 'bg-red-500',
                         ];
                     @endphp
                     @foreach($casesByStatus as $status)
                     @php
+                        $statusValue = $status->status instanceof \App\Enums\CaseStatus ? $status->status->value : $status->status;
                         $percentage = $totalCases > 0 ? round(($status->count / $totalCases) * 100) : 0;
-                        $color = $statusColors[$status->status] ?? 'bg-slate-400';
+                        $color = $statusColors[$statusValue] ?? 'bg-slate-400';
                     @endphp
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-slate-700">{{ $status->status }}</span>
+                            <span class="text-sm font-medium text-slate-700">{{ $statusValue }}</span>
                             <span class="text-sm text-slate-500">{{ $status->count }} ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -287,6 +291,25 @@
                 </div>
             </div>
         </div>
+        
+        @if(session('warning'))
+        <div class="mx-6 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-amber-500 mr-3"></i>
+                <p class="text-sm text-amber-700">{{ session('warning') }}</p>
+            </div>
+        </div>
+        @endif
+        
+        @if(session('error'))
+        <div class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-times-circle text-red-500 mr-3"></i>
+                <p class="text-sm text-red-700">{{ session('error') }}</p>
+            </div>
+        </div>
+        @endif
+        
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Export Cases -->
@@ -297,24 +320,34 @@
                         </div>
                         <h3 class="font-semibold text-slate-900">Export Cases</h3>
                     </div>
-                    <form action="{{ route('reports.export', 'cases') }}" method="GET" class="space-y-4">
+                    <form action="{{ route('reports.export', 'cases') }}" method="GET" class="space-y-4" id="exportCasesForm">
+                        <input type="hidden" name="format" value="csv">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">From Date</label>
-                                <input type="date" name="date_from" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="date" name="date_from" 
+                                       value="{{ now()->startOfMonth()->format('Y-m-d') }}"
+                                       max="{{ now()->format('Y-m-d') }}"
+                                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">To Date</label>
-                                <input type="date" name="date_to" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="date" name="date_to" 
+                                       value="{{ now()->format('Y-m-d') }}"
+                                       max="{{ now()->format('Y-m-d') }}"
+                                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                         </div>
-                        <select name="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">All Statuses</option>
-                            @foreach(\App\Models\CaseModel::STATUSES as $status)
-                            <option value="{{ $status }}">{{ $status }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" name="format" value="csv" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Status Filter</label>
+                            <select name="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Statuses</option>
+                                @foreach(\App\Enums\CaseStatus::cases() as $status)
+                                <option value="{{ $status->value }}">{{ $status->value }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
                             <i class="fas fa-file-csv mr-2"></i>Download CSV
                         </button>
                     </form>
@@ -328,24 +361,32 @@
                         </div>
                         <h3 class="font-semibold text-slate-900">Export Hearings</h3>
                     </div>
-                    <form action="{{ route('reports.export', 'hearings') }}" method="GET" class="space-y-4">
+                    <form action="{{ route('reports.export', 'hearings') }}" method="GET" class="space-y-4" id="exportHearingsForm">
+                        <input type="hidden" name="format" value="csv">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">From Date</label>
-                                <input type="date" name="date_from" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <input type="date" name="date_from" 
+                                       value="{{ now()->startOfMonth()->format('Y-m-d') }}"
+                                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">To Date</label>
-                                <input type="date" name="date_to" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <input type="date" name="date_to" 
+                                       value="{{ now()->addMonths(3)->format('Y-m-d') }}"
+                                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                             </div>
                         </div>
-                        <select name="prosecutor_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                            <option value="">All Prosecutors</option>
-                            @foreach($prosecutors as $prosecutor)
-                            <option value="{{ $prosecutor->id }}">{{ $prosecutor->name }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" name="format" value="csv" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-colors">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Prosecutor Filter</label>
+                            <select name="prosecutor_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <option value="">All Prosecutors</option>
+                                @foreach($prosecutors as $prosecutor)
+                                <option value="{{ $prosecutor->id }}">{{ $prosecutor->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-colors">
                             <i class="fas fa-file-csv mr-2"></i>Download CSV
                         </button>
                     </form>

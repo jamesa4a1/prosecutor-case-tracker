@@ -1,7 +1,7 @@
-<x-layouts.app title="Dashboard" header="Dashboard">
+<x-layouts.app title="{{ auth()->user()->role->value }} Dashboard" header="{{ auth()->user()->role->value }} Dashboard">
     <!-- Page Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+        <h1 class="text-3xl font-bold text-slate-900">{{ auth()->user()->role->value }} Dashboard</h1>
         <p class="text-slate-600 mt-2">Overview of cases, hearings, and prosecutor activity</p>
     </div>
 
@@ -130,7 +130,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-slate-600">{{ $hearing->location ?? 'TBD' }}</div>
+                                    <div class="text-sm text-slate-600">{{ $hearing->court_branch ?? $hearing->venue ?? 'TBD' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-slate-900">{{ $hearing->assignedProsecutor->name ?? 'Unassigned' }}</div>
@@ -244,11 +244,14 @@
                                         'Trial' => 'bg-orange-100 text-orange-800',
                                         'Closed' => 'bg-slate-100 text-slate-800',
                                         'Dismissed' => 'bg-red-100 text-red-800',
+                                        'Pending' => 'bg-yellow-100 text-yellow-800',
+                                        'Archived' => 'bg-slate-100 text-slate-800',
                                     ];
-                                    $colorClass = $statusColors[$case->status] ?? 'bg-slate-100 text-slate-800';
+                                    $statusValue = $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status;
+                                    $colorClass = $statusColors[$statusValue] ?? 'bg-slate-100 text-slate-800';
                                 @endphp
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $colorClass }}">
-                                    {{ $case->status }}
+                                    {{ $statusValue }}
                                 </span>
                             </div>
                         </div>

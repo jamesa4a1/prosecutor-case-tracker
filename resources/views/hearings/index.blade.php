@@ -129,6 +129,9 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center space-x-2">
+                                <a href="{{ route('hearings.show', $hearing) }}" class="p-2 text-gray-600 hover:text-primary-600" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{{ route('hearings.edit', $hearing) }}" class="p-2 text-gray-600 hover:text-primary-600" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>

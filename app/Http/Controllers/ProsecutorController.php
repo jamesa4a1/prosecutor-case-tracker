@@ -6,6 +6,8 @@ use App\Models\CaseModel;
 use App\Models\Prosecutor;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ProsecutorMessage;
 
 class ProsecutorController extends Controller
 {
@@ -147,5 +149,39 @@ class ProsecutorController extends Controller
 
         return redirect()->route('prosecutors.index')
             ->with('success', 'Prosecutor deleted successfully.');
+    }
+
+    /**
+     * Send an email message to the prosecutor.
+     */
+    public function sendMessage(Request $request, Prosecutor $prosecutor)
+    {
+        $request->validate([
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $senderName = auth()->user()->name;
+        $senderEmail = auth()->user()->email;
+        $messageContent = $request->message;
+
+        // CHANGE THIS EMAIL ADDRESS to the actor's actual email
+        // For testing with MailHog, use any email address
+        $recipientEmail = $prosecutor->email; // Or hardcode: 'actor@example.com'
+
+        try {
+            Mail::to($recipientEmail)->send(
+                new ProsecutorMessage($senderName, $senderEmail, $messageContent)
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Message sent to ' . $prosecutor->email
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send message: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -27,7 +27,7 @@
                     <i class="fas fa-bell w-5 mr-3"></i>
                     <span class="font-medium">Notifications</span>
                 </button>
-                @if(auth()->user()->role === 'Admin')
+                @if(auth()->user()->isAdmin())
                 <button @click="activeTab = 'system'" 
                     :class="{ 'bg-blue-50 border-l-4 border-blue-600 text-blue-700': activeTab === 'system', 'text-slate-600 hover:bg-slate-50': activeTab !== 'system' }"
                     class="w-full flex items-center px-4 py-3 text-left border-t border-slate-100 transition-colors">
@@ -81,7 +81,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-slate-900">{{ auth()->user()->name }}</h4>
-                                <p class="text-sm text-slate-500">{{ auth()->user()->role ?? 'User' }}</p>
+                                <p class="text-sm text-slate-500">{{ auth()->user()->role?->value ?? 'User' }}</p>
                                 <p class="text-xs text-slate-400 mt-1">JPG, PNG or GIF. Max 2MB.</p>
                                 <button type="button" x-show="hasNewAvatar" @click="removeAvatar()" class="text-xs text-red-600 hover:text-red-700 mt-1">Remove new photo</button>
                             </div>
@@ -101,7 +101,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-2">Role</label>
-                                <input type="text" value="{{ auth()->user()->role ?? 'User' }}" disabled
+                                <input type="text" value="{{ auth()->user()->role?->value ?? 'User' }}" disabled
                                     class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed">
                                 <p class="text-xs text-slate-400 mt-1">Contact admin to change role</p>
                             </div>
@@ -337,7 +337,7 @@
             </div>
 
             <!-- System Tab (Admin Only) -->
-            @if(auth()->user()->role === 'Admin')
+            @if(auth()->user()->isAdmin())
             <div x-show="activeTab === 'system'" x-cloak>
                 <div class="space-y-6">
                     <!-- Status Management -->

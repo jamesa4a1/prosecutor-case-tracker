@@ -473,6 +473,32 @@ npm run build
 - Check Mailhog UI: http://localhost:8025
 - Restart Mailhog: `docker-compose restart mailhog`
 
+#### ❌ Docker Desktop - WSL is Unresponsive
+**Error:** `error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/containers/json...": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.`
+
+**Solution 1 - Restart WSL (Quick Fix):**
+```powershell
+# Open PowerShell as Administrator and run:
+wsl --shutdown
+# Wait 10 seconds, then restart Docker Desktop from Start Menu
+# Wait for Docker Desktop to show "Docker Desktop is running" in system tray
+# Then retry your docker commands
+```
+
+**Solution 2 - Restart Docker Desktop:**
+1. Right-click Docker Desktop icon in system tray
+2. Select "Quit Docker Desktop"
+3. Wait 10 seconds
+4. Start Docker Desktop from Start Menu
+5. Wait until it shows "Docker Desktop is running"
+
+**Solution 3 - Restart Computer:**
+If above solutions don't work, restart your Windows machine.
+
+**Prevention:**
+- Always ensure Docker Desktop is running before executing docker commands
+- Check system tray for Docker icon status
+
 ---
 
 ## 🐳 Docker Commands Reference

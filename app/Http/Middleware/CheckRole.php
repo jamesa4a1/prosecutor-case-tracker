@@ -14,7 +14,13 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        if (!in_array($request->user()->role, $roles)) {
+        // Get the role value - handle both Enum and string cases
+        $userRole = $request->user()->role;
+        $userRoleValue = $userRole instanceof \App\Enums\UserRole 
+            ? $userRole->value 
+            : $userRole;
+
+        if (!in_array($userRoleValue, $roles)) {
             abort(403, 'Unauthorized. You do not have permission to access this page.');
         }
 

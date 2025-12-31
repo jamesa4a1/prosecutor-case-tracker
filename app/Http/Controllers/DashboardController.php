@@ -6,6 +6,7 @@ use App\Models\CaseModel;
 use App\Models\Hearing;
 use App\Models\Prosecutor;
 use App\Models\StatusHistory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,22 +15,37 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
 
-    // Admin dashboard
+    // Admin dashboard - redirect to unified dashboard with admin-specific data
     public function admin()
     {
-        return view('dashboard-admin');
+        // Ensure user is admin
+        if (!Auth::user()->isAdmin()) {
+            return redirect()->route('dashboard');
+        }
+        
+        return $this->index();
     }
 
-    // Prosecutor dashboard
+    // Prosecutor dashboard - redirect to unified dashboard with prosecutor-specific data
     public function prosecutor()
     {
-        return view('dashboard-prosecutor');
+        // Ensure user is prosecutor
+        if (!Auth::user()->isProsecutor()) {
+            return redirect()->route('dashboard');
+        }
+        
+        return $this->index();
     }
 
-    // Clerk dashboard
+    // Clerk dashboard - redirect to unified dashboard with clerk-specific data
     public function clerk()
     {
-        return view('dashboard-clerk');
+        // Ensure user is clerk
+        if (!Auth::user()->isClerk()) {
+            return redirect()->route('dashboard');
+        }
+        
+        return $this->index();
     }
 
     public function index()

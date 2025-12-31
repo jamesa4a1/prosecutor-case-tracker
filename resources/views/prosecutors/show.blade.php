@@ -12,7 +12,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
         <!-- Cover Gradient -->
         <div class="h-32 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 relative">
-            @if(in_array(auth()->user()->role ?? '', ['Admin', 'Clerk']))
+            @if(auth()->user()->isAdmin() || auth()->user()->isClerk())
             <div class="absolute top-4 right-4 flex gap-2">
                 <a href="{{ route('prosecutors.edit', $prosecutor) }}" 
                     class="px-4 py-2 bg-white/20 backdrop-blur text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium">
@@ -55,10 +55,10 @@
                 
                 <!-- Quick Actions -->
                 <div class="flex gap-3 mt-4 lg:mt-0">
-                    <a href="mailto:{{ $prosecutor->email }}" 
+                    <button onclick="openChatbox()" 
                         class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium">
                         <i class="fas fa-envelope mr-2"></i>Send Email
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -253,4 +253,166 @@
             </div>
         </div>
     </div>
+
+    <!-- Email Chatbox Modal -->
+    <div id="emailChatbox" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="closeChatbox()"></div>
+        
+        <!-- Chatbox Container -->
+        <div class="absolute bottom-0 right-0 m-4 w-full max-w-md">
+            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-envelope text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-semibold">Send Message</h3>
+                            <p class="text-blue-100 text-xs">To: {{ $prosecutor->name }}</p>
+                        </div>
+                    </div>
+                    <button onclick="closeChatbox()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Messages Area -->
+                <div id="messagesArea" class="px-6 py-4 h-96 overflow-y-auto bg-slate-50 space-y-3">
+                    <!-- Messages will be appended here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="border-t border-slate-200 bg-white p-4">
+                    <form id="messageForm" class="flex gap-2">
+                        @csrf
+                        <textarea 
+                            id="messageInput" 
+                            rows="2" 
+                            placeholder="Type your message here..."
+                            class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                            required
+                        ></textarea>
+                        <button 
+                            type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 self-end">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Send</span>
+                        </button>
+                    </form>
+                    <p class="text-xs text-slate-500 mt-2">Messages will be sent to {{ $prosecutor->email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        const chatbox = document.getElementById('emailChatbox');
+        const messagesArea = document.getElementById('messagesArea');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const prosecutorId = {{ $prosecutor->id }};
+
+        function openChatbox() {
+            chatbox.classList.remove('hidden');
+            messageInput.focus();
+        }
+
+        function closeChatbox() {
+            chatbox.classList.add('hidden');
+        }
+
+        function addMessage(content, type = 'sent') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${type === 'sent' ? 'justify-end' : 'justify-start'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[80%] px-4 py-2 rounded-lg ${
+                type === 'sent' 
+                    ? 'bg-blue-600 text-white' 
+                    : type === 'success'
+                    ? 'bg-green-100 text-green-800 border border-green-200'
+                    : 'bg-slate-200 text-slate-800'
+            }`;
+            
+            if (type === 'success') {
+                bubble.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${content}`;
+            } else {
+                bubble.textContent = content;
+            }
+            
+            messageDiv.appendChild(bubble);
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex justify-center';
+            messageDiv.id = 'loadingMessage';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'px-4 py-2 bg-slate-200 rounded-lg text-slate-600 text-sm';
+            bubble.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+            
+            messageDiv.appendChild(bubble);
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingMsg = document.getElementById('loadingMessage');
+            if (loadingMsg) {
+                loadingMsg.remove();
+            }
+        }
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user's message to chat
+            addMessage(message, 'sent');
+            messageInput.value = '';
+            
+            // Show loading
+            addLoadingMessage();
+
+            try {
+                const response = await fetch(`/prosecutors/${prosecutorId}/send-message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                removeLoadingMessage();
+
+                if (data.success) {
+                    addMessage(data.message, 'success');
+                } else {
+                    addMessage('Failed to send message. Please try again.', 'error');
+                }
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('An error occurred. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !chatbox.classList.contains('hidden')) {
+                closeChatbox();
+            }
+        });
+    </script>
+    @endpush
 </x-layouts.app>

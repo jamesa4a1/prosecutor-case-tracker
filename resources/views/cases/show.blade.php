@@ -15,7 +15,7 @@
                 <div class="flex items-center space-x-3 mb-2">
                     <h1 class="text-2xl font-bold text-gray-900">{{ $case->case_number }}</h1>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $case->status_badge_class }}">
-                        {{ $case->status }}
+                        {{ $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status }}
                     </span>
                 </div>
                 <p class="text-lg text-gray-600">{{ $case->title }}</p>

@@ -81,11 +81,12 @@ class CaseController extends Controller
 
         $case = CaseModel::create($validated);
 
-        // Record status history
+        // Record status history - store string value
+        $statusValue = $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status;
         StatusHistory::create([
             'case_id' => $case->id,
             'from_status' => null,
-            'to_status' => $case->status,
+            'to_status' => $statusValue,
             'changed_by' => Auth::id(),
             'changed_at' => now(),
         ]);
@@ -103,7 +104,7 @@ class CaseController extends Controller
 
     public function edit(CaseModel $case)
     {
-        $prosecutors = Prosecutor::where('active', true)->get();
+        $prosecutors = Prosecutor::where('is_active', true)->get();
         $statuses = CaseModel::STATUSES;
         $types = CaseModel::TYPES;
 
@@ -129,11 +130,12 @@ class CaseController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // Track status change
-        if ($case->status !== $validated['status']) {
+        // Track status change - compare properly with Enum
+        $currentStatusValue = $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status;
+        if ($currentStatusValue !== $validated['status']) {
             StatusHistory::create([
                 'case_id' => $case->id,
-                'from_status' => $case->status,
+                'from_status' => $currentStatusValue,
                 'to_status' => $validated['status'],
                 'changed_by' => Auth::id(),
                 'changed_at' => now(),
@@ -160,10 +162,11 @@ class CaseController extends Controller
             'status' => 'required|in:' . implode(',', CaseModel::STATUSES),
         ]);
 
-        if ($case->status !== $validated['status']) {
+        $currentStatusValue = $case->status instanceof \App\Enums\CaseStatus ? $case->status->value : $case->status;
+        if ($currentStatusValue !== $validated['status']) {
             StatusHistory::create([
                 'case_id' => $case->id,
-                'from_status' => $case->status,
+                'from_status' => $currentStatusValue,
                 'to_status' => $validated['status'],
                 'changed_by' => Auth::id(),
                 'changed_at' => now(),

@@ -861,7 +861,7 @@
             <!-- REPLACE: Update this src with your actual logo path -->
             <img src="{{ asset('images/logo.png') }}" alt="AProsecutor Logo" class="logo" style="border-radius: 15px;">
             <div class="brand">
-                <span class="brand-name">AProsecutor</span>
+                <span class="brand-name">ProsecuTrack</span>
                 <span class="brand-subtitle">Case Tracker</span>
             </div>
         </div>

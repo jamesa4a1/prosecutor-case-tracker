@@ -68,15 +68,18 @@
                     <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
                         Role <span class="text-red-500">*</span>
                     </label>
+                    @php
+                        $userRoleValue = $user->role instanceof \App\Enums\UserRole ? $user->role->value : $user->role;
+                    @endphp
                     <select name="role" id="role" required
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('role') border-red-500 @enderror"
                         {{ $user->id === auth()->id() ? 'disabled' : '' }}>
                         @foreach($roles as $value => $label)
-                        <option value="{{ $value }}" {{ old('role', $user->role) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $value }}" {{ old('role', $userRoleValue) == $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                     @if($user->id === auth()->id())
-                    <input type="hidden" name="role" value="{{ $user->role }}">
+                    <input type="hidden" name="role" value="{{ $userRoleValue }}">
                     <p class="mt-1 text-xs text-gray-500">You cannot change your own role</p>
                     @endif
                     @error('role')

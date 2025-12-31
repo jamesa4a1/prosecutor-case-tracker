@@ -42,7 +42,7 @@ class AuthController extends Controller
             }
 
             // Check if selected role matches user's role
-            if (Auth::user()->role !== $credentials['role']) {
+            if (Auth::user()->role->value !== $credentials['role']) {
                 Auth::logout();
                 throw ValidationException::withMessages([
                     'role' => 'Selected role does not match your account role.',
@@ -70,16 +70,17 @@ class AuthController extends Controller
      */
     protected function redirectToDashboard()
     {
-        switch (Auth::user()->role) {
-            case 'Admin':
-                return redirect()->route('dashboard.admin');
-            case 'Prosecutor':
-                return redirect()->route('dashboard.prosecutor');
-            case 'Clerk':
-                return redirect()->route('dashboard.clerk');
-            default:
-                return redirect()->route('dashboard');
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return redirect()->route('dashboard.admin');
+        } elseif ($user->isProsecutor()) {
+            return redirect()->route('dashboard.prosecutor');
+        } elseif ($user->isClerk()) {
+            return redirect()->route('dashboard.clerk');
         }
+        
+        return redirect()->route('dashboard');
     }
 
     /**
@@ -209,7 +210,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', PasswordRule::min(10)->letters()->mixedCase()->numbers()->symbols()],
             'role' => ['required', 'in:Admin,Prosecutor,Clerk'],
             'office' => ['nullable', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],

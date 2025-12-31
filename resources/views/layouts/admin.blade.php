@@ -77,7 +77,7 @@
                     </li>
                     
                     <!-- Admin Section -->
-                    @if(auth()->check() && auth()->user()->role === 'admin')
+                    @if(auth()->check() && auth()->user()->isAdmin())
                     <li class="pt-4">
                         <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administration</p>
                     </li>

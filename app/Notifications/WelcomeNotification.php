@@ -42,7 +42,7 @@ class WelcomeNotification extends Notification
             ->line('Your account has been successfully created in the **Prosecutor Case Tracking System**.')
             ->line('**Account Details:**')
             ->line('- **Email:** ' . $this->user->email)
-            ->line('- **Role:** ' . $this->user->role)
+            ->line('- **Role:** ' . $this->user->role->value)
             ->line('You can now access the system to manage cases, track hearings, and collaborate with your team.')
             ->action('Login to Dashboard', url('/login'))
             ->line('If you did not create this account, please contact the system administrator immediately.')

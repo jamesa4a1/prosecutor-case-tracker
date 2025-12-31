@@ -29,10 +29,10 @@ Route::get('/support', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes (Guest Only)
+| Authentication Routes (Guest Only) - Rate Limited
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'throttle:5,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
@@ -45,10 +45,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 /*
 |--------------------------------------------------------------------------
-| Email Verification Routes (Authenticated but not verified)
+| Email Verification Routes (Authenticated but not verified) - Rate Limited
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'throttle:3,1'])->group(function () {
     Route::get('/verify-email', [AuthController::class, 'showVerificationNotice'])->name('verification.notice');
     Route::post('/verify-email', [AuthController::class, 'verifyCode'])->name('verification.verify');
     Route::post('/verify-email/resend', [AuthController::class, 'resendVerificationCode'])->name('verification.resend');
@@ -70,30 +70,34 @@ Route::get('/', function () {
 */
 Route::middleware(['auth'])->group(function () {
     
-    // Dashboards by role
+    // Main Dashboard (redirects based on role)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])->name('dashboard.admin');
-    Route::get('/dashboard/prosecutor', [DashboardController::class, 'prosecutor'])->name('dashboard.prosecutor');
-    Route::get('/dashboard/clerk', [DashboardController::class, 'clerk'])->name('dashboard.clerk');
+    
+    // Role-specific dashboards with middleware protection
+    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
+        ->middleware('role:Admin')
+        ->name('dashboard.admin');
+    Route::get('/dashboard/prosecutor', [DashboardController::class, 'prosecutor'])
+        ->middleware('role:Prosecutor')
+        ->name('dashboard.prosecutor');
+    Route::get('/dashboard/clerk', [DashboardController::class, 'clerk'])
+        ->middleware('role:Clerk')
+        ->name('dashboard.clerk');
     
     // Cases
     Route::resource('cases', CaseController::class);
     Route::post('/cases/{case}/status', [CaseController::class, 'updateStatus'])->name('cases.updateStatus');
     Route::post('/cases/{case}/archive', [CaseController::class, 'archive'])->name('cases.archive');
     
-    // Hearings
-    Route::resource('hearings', HearingController::class);
+    // Hearings - Calendar route MUST come before resource to avoid conflict with {hearing} parameter
     Route::get('/hearings/calendar', [HearingController::class, 'calendar'])->name('hearings.calendar');
+    Route::resource('hearings', HearingController::class);
     
     // Notes
     Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
     Route::delete('/notes/{note}', [NoteController::class, 'destroy'])->name('notes.destroy');
     
-    // Prosecutors - View available to all, Edit restricted to Admin/Clerk
-    Route::get('/prosecutors', [ProsecutorController::class, 'index'])->name('prosecutors.index');
-    Route::get('/prosecutors/{prosecutor}', [ProsecutorController::class, 'show'])->name('prosecutors.show');
-    
-    // Prosecutors Management (Admin and Clerk only)
+    // Prosecutors - Management routes (Admin and Clerk only) - MUST come before parameterized routes
     Route::middleware('role:Admin,Clerk')->group(function () {
         Route::get('/prosecutors/create', [ProsecutorController::class, 'create'])->name('prosecutors.create');
         Route::post('/prosecutors', [ProsecutorController::class, 'store'])->name('prosecutors.store');
@@ -101,6 +105,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/prosecutors/{prosecutor}', [ProsecutorController::class, 'update'])->name('prosecutors.update');
         Route::delete('/prosecutors/{prosecutor}', [ProsecutorController::class, 'destroy'])->name('prosecutors.destroy');
     });
+    
+    // Prosecutors - View available to all (must come after /prosecutors/create to avoid route conflict)
+    Route::get('/prosecutors', [ProsecutorController::class, 'index'])->name('prosecutors.index');
+    Route::get('/prosecutors/{prosecutor}', [ProsecutorController::class, 'show'])->name('prosecutors.show');
+    Route::post('/prosecutors/{prosecutor}/send-message', [ProsecutorController::class, 'sendMessage'])->name('prosecutors.sendMessage');
     
     // Reports
     Route::prefix('reports')->name('reports.')->group(function () {

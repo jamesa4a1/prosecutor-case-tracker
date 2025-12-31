@@ -1,30 +1,35 @@
 <x-layouts.app title="Cases by Status" header="Cases by Status">
-    <!-- Breadcrumb -->
-    <nav class="mb-6">
-        <ol class="flex items-center space-x-2 text-sm">
-            <li><a href="{{ route('reports.index') }}" class="text-primary-600 hover:text-primary-700">Reports</a></li>
-            <li><i class="fas fa-chevron-right text-gray-400 text-xs"></i></li>
-            <li class="text-gray-500">Cases by Status</li>
-        </ol>
-    </nav>
-
-    <!-- Filters -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <form method="GET" action="{{ route('reports.casesByStatus') }}" class="flex flex-wrap items-end gap-4">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <nav class="mb-4">
+            <ol class="flex items-center space-x-2 text-sm">
+                <li><a href="{{ route('reports.index') }}" class="text-teal-600 hover:text-teal-700 font-medium">Reports</a></li>
+                <li><i class="fas fa-chevron-right text-slate-400 text-xs"></i></li>
+                <li class="text-slate-500">Cases by Status</li>
+            </ol>
+        </nav>
+        <div class="flex items-center justify-between">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                <h1 class="text-3xl font-bold text-slate-900">Cases by Status</h1>
+                <p class="text-slate-600 mt-1 text-sm">View case distribution by status</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            <!-- Filters -->
+            <div class="w-80">
+                <form method="GET" action="{{ route('reports.casesByStatus') }}" class="flex items-center gap-2">
+                    <select name="prosecutor_id" onchange="this.form.submit()" class="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-white hover:border-slate-400">
+                        <option value="">All Prosecutors</option>
+                        @foreach($prosecutors as $prosecutor)
+                        <option value="{{ $prosecutor->id }}" {{ $prosecutorId == $prosecutor->id ? 'selected' : '' }}>{{ $prosecutor->name }}</option>
+                        @endforeach
+                    </select>
+                    @if($prosecutorId)
+                    <a href="{{ route('reports.casesByStatus') }}" class="flex items-center justify-center w-9 h-9 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all" title="Clear filter">
+                        <i class="fas fa-times text-sm"></i>
+                    </a>
+                    @endif
+                </form>
             </div>
-            <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-                Apply Filter
-            </button>
-        </form>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -52,6 +57,7 @@
                     <tr>
                         <td class="py-3">
                             @php
+                                $statusValue = $row->status instanceof \App\Enums\CaseStatus ? $row->status->value : $row->status;
                                 $colors = [
                                     'Pending' => 'bg-yellow-100 text-yellow-800',
                                     'Under Investigation' => 'bg-blue-100 text-blue-800',
@@ -60,8 +66,8 @@
                                     'Archived' => 'bg-gray-100 text-gray-800',
                                 ];
                             @endphp
-                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $colors[$row->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ $row->status }}
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $colors[$statusValue] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ $statusValue }}
                             </span>
                         </td>
                         <td class="py-3 text-right font-medium text-gray-900">{{ $row->count }}</td>
@@ -83,14 +89,20 @@
     @push('scripts')
     <script>
         const ctx = document.getElementById('statusChart').getContext('2d');
+        @php
+            $chartLabels = $data->map(function($row) {
+                return $row->status instanceof \App\Enums\CaseStatus ? $row->status->value : $row->status;
+            });
+        @endphp
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: {!! json_encode($data->pluck('status')) !!},
+                labels: {!! json_encode($chartLabels) !!},
                 datasets: [{
                     data: {!! json_encode($data->pluck('count')) !!},
-                    backgroundColor: ['#FCD34D', '#60A5FA', '#A78BFA', '#34D399', '#9CA3AF'],
-                    borderWidth: 0
+                    backgroundColor: ['#0D9488', '#F59E0B', '#6366F1', '#10B981', '#EF4444', '#8B5CF6', '#3B82F6'],
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
             options: {
@@ -98,9 +110,15 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     }
-                }
+                },
+                cutout: '60%'
             }
         });
     </script>

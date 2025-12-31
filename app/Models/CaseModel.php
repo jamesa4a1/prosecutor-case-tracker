@@ -20,6 +20,26 @@ class CaseModel extends Model
     protected $table = 'cases';
 
     /**
+     * Available case statuses for forms and validation.
+     */
+    public const STATUSES = [
+        'Pending',
+        'Under Investigation',
+        'Filed',
+        'Closed',
+        'Archived',
+    ];
+
+    /**
+     * Available case types for forms and validation.
+     */
+    public const TYPES = [
+        'Criminal',
+        'Civil',
+        'Special',
+    ];
+
+    /**
      * Searchable columns for the Searchable trait.
      */
     protected array $searchable = [

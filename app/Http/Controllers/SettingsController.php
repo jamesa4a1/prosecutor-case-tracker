@@ -30,7 +30,7 @@ class SettingsController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
             'office' => ['nullable', 'string', 'max:255'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,gif,webp', 'max:2048', 'dimensions:max_width=2000,max_height=2000'],
         ]);
 
         if ($request->hasFile('avatar')) {

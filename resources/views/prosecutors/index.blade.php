@@ -6,7 +6,7 @@
                 <h1 class="text-3xl font-bold text-slate-900">Prosecutors</h1>
                 <p class="text-slate-600 mt-1">Directory of prosecution officers</p>
             </div>
-            @if(in_array(auth()->user()->role ?? '', ['Admin', 'Clerk']))
+            @if(auth()->user()->isAdmin() || auth()->user()->isClerk())
             <a href="{{ route('prosecutors.create') }}" 
                 class="inline-flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl">
                 <i class="fas fa-plus mr-2"></i>Add Prosecutor
@@ -110,7 +110,7 @@
                         class="flex-1 py-2.5 px-4 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition-colors text-center">
                         <i class="fas fa-eye mr-2"></i>Profile
                     </a>
-                    @if(in_array(auth()->user()->role ?? '', ['Admin', 'Clerk']))
+                    @if(auth()->user()->isAdmin() || auth()->user()->isClerk())
                     <a href="{{ route('prosecutors.edit', $prosecutor) }}" 
                         class="py-2.5 px-4 bg-slate-50 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-colors">
                         <i class="fas fa-edit"></i>
@@ -140,7 +140,7 @@
                 Get started by adding a new prosecutor to the directory.
             @endif
         </p>
-        @if(in_array(auth()->user()->role ?? '', ['Admin', 'Clerk']))
+        @if(auth()->user()->isAdmin() || auth()->user()->isClerk())
         <a href="{{ route('prosecutors.create') }}" 
             class="inline-flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Add Prosecutor

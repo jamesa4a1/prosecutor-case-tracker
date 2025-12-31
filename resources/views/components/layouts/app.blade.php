@@ -181,6 +181,18 @@
                     <span>Reports</span>
                 </a>
                 
+                @if(auth()->user()->isAdmin())
+                <hr class="my-4 border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-4">Admin</p>
+                
+                <!-- User Management -->
+                <a href="{{ route('admin.users.index') }}" 
+                   class="sidebar-link flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                    <i class="fas fa-user-cog w-5 mr-3"></i>
+                    <span>User Management</span>
+                </a>
+                @endif
+                
                 <hr class="my-4 border-slate-700">
                 
                 <!-- Settings -->
@@ -203,7 +215,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-white truncate">{{ auth()->user()->name ?? 'Guest' }}</p>
-                        <p class="text-xs text-slate-400">{{ auth()->user()->role ?? 'Prosecutor' }}</p>
+                        <p class="text-xs text-slate-400">{{ auth()->user()->role?->value ?? 'User' }}</p>
                     </div>
                     <button class="text-slate-400 hover:text-white transition-colors">
                         <i class="fas fa-chevron-down"></i>
